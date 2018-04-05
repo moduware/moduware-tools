@@ -1,0 +1,19 @@
+{
+  "name": "repository-api-client",
+  "version": "1.0.0",
+  "description": "Client to work with Moduware repository API",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moduware/repository-api-client.git"
+  },
+  "author": "Alex Chernov (Moduware)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/moduware/repository-api-client/issues"
+  },
+  "homepage": "https://github.com/moduware/repository-api-client#readme"
+}
