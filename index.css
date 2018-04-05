@@ -35,3 +35,10 @@ body > .container {
 code {
   font-size: 80%;
 }
+
+.logout-button__username::before {
+  content: '(';
+}
+.logout-button__username::after {
+  content: ')';
+}

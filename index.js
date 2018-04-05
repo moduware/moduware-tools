@@ -10,6 +10,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   const isAuthorised = await checkAuthorisation();
   if(!isAuthorised) {
     $('#authModal').modal({backdrop: 'static'});
+  } else {
+    document.getElementById('logoutButton').classList.remove('d-none');
+    const user = await getUser();
+    const userNameField = document.getElementById('userName');
+    userNameField.textContent = user.name;
+    userNameField.classList.remove('d-none');
   }
 });
 
@@ -21,7 +27,22 @@ function checkAuthorisation() {
         console.log(err);
       } else {
         resolve(true);
+        accessToken = authResult.accessToken;
         console.log('Token: ', authResult.accessToken);
+      }
+    });
+  });
+}
+
+function getUser() {
+  return new Promise((resolve, reject) => {
+    auth0.client.userInfo(accessToken, function(err, user) {
+      if(err) {
+        console.log(err);
+        reject(err);
+      } else {
+        console.log('User: ', user);
+        resolve(user);
       }
     });
   });
