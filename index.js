@@ -3,10 +3,12 @@ var auth0 = new auth0.WebAuth({
   clientID: 'nJUhKG5X8kjdDINfY91fKshcVNBGOsJo'
 });
 let accessToken = null;
+let uuidsSubmitCalceled = false;
 
 document.addEventListener('DOMContentLoaded', async function() {
   document.getElementById('clientAuthoriseButton').addEventListener('click', clientAuthoriseButtonClickHandler);
   document.getElementById('uuidListSubmit').addEventListener('click', uuidListSubmitClickHandler);
+  document.getElementById('stopUuidsSubmissionButton').addEventListener('click', () => uuidsSubmitCalceled = true);
   
   const isAuthorised = await checkAuthorisation();
   if(!isAuthorised) {
@@ -49,10 +51,11 @@ function uuidListSubmitClickHandler(event) {
 
   let badUuidFound = false;
   for(let i = 0; i<uuids.length; i++) {
-    let uuid = uuids[i];
+    let uuid = uuids[i].replace(/-/g, '');
     if(uuid == '') continue;
     if(uuid.length != 32) {
       badUuidFound = true;
+      console.log(uuid);
       showBadUuidError(i);
       break;
     }
@@ -61,34 +64,57 @@ function uuidListSubmitClickHandler(event) {
 
   if(badUuidFound) return;
   console.log(category, type, cleanUuids);
-  document.getElementById('productAddForm').classList.add('d-none');
-  document.getElementById('productAddProgress').classList.remove('d-none');
+  showProgress();
   submitUuids(category, type, cleanUuids);
 }
 
 async function submitUuids(category, type, uuids) {
+  uuidsSubmitCalceled = false;
   let percent = 0;
   let i = 0;
   for(let uuid of uuids) {
+    if(uuidsSubmitCalceled) {
+      showForm();
+      return;
+    }
     let newPercent = parseInt(i / uuids.length * 100);
     if(newPercent != percent) {
       percent = newPercent;
       showProgressPercent(percent);
     }
-    // let result = await postData(`http://api.moduware.com/v1/product/${uuid}`, {
-    let result = await postData(`http://localhost:3000/v1/product/${uuid}`, {
-      type: type,
-      category: category
-    });
-    console.log(result);
-    return;
+    // let result = await postData(`http://localhost:3000/v1/product/${uuid}`, {
+    try {
+      let result = await postData(`http://api.moduware.com/v1/product/${uuid}`, {
+        type: type,
+        category: category
+      });
+      if(typeof(result.error_code) != 'undefined') {
+        alert(`Problem with UUID: ${uuid}, ${result.message}`);
+        showForm();
+        return;
+      }
+    } catch(e) {
+      console.log(e);
+      alert('Unknown error: ', e.message);
+      return;
+    }
+    
     //await sleep(1000);
     i++;
   }
 
+  showForm();
+  document.getElementById('uuidsSubmittedAlert').classList.remove('d-none');
+}
+
+function showForm() {
   document.getElementById('productAddForm').classList.remove('d-none');
   document.getElementById('productAddProgress').classList.add('d-none');
-  document.getElementById('uuidsSubmittedAlert').classList.remove('d-none');
+}
+
+function showProgress() {
+  document.getElementById('productAddForm').classList.add('d-none');
+  document.getElementById('productAddProgress').classList.remove('d-none');
 }
 
 function showProgressPercent(percent) {
