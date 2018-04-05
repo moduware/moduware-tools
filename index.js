@@ -84,7 +84,7 @@ async function submitUuids(category, type, uuids) {
     }
     // let result = await postData(`http://localhost:3000/v1/product/${uuid}`, {
     try {
-      let result = await postData(`http://api.moduware.com/v1/product/${uuid}`, {
+      let result = await postData(`https://api.moduware.com/v1/product/${uuid}`, {
         type: type,
         category: category
       });
@@ -169,7 +169,7 @@ function getUser() {
 
 function getProductTypesList() {
   try {
-    return fetch(`http://api.moduware.com/v1/product-type/list`).then(response => response.json());
+    return fetch(`https://api.moduware.com/v1/product-type/list`).then(response => response.json());
   } catch(err) {
     console.log(err);
     alert('Cannot retrieve product types list');
