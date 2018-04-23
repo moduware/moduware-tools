@@ -19,11 +19,20 @@ async function main(productType, uuidsListPath) {
   const token = await getClientToken(client.id, client.secret);
   const uuidsList = await getUuidsList(uuidsListPath);
 
-  for(let uuid of uuidsList) {
+  let percent = 0;
+
+  for(let index = 0; index < uuidsList.length; index++) {
+    percent = 100 * index / uuidsList.length;
+    let formatedPercent = ('0' + percent.toFixed(1)).slice(-4);
+    
+    let uuid = uuidsList[index];
     uuid = uuid.toLocaleLowerCase();
-    let state = await addProductUuid(uuid, productType, token);
-    console.log(`${uuid} - ${state}`);
-    return;
+    try {
+      let state = await addProductUuid(uuid, productType, token);
+      console.log(`${formatedPercent}% ${uuid} - ${state}`);
+    } catch(e) {
+      console.log(`${formatedPercent}% ${uuid} - ${e.message}`);
+    }
   }
 };
 
@@ -85,8 +94,6 @@ async function addProductUuid(uuid, type, accessToken) {
       },
       json: true 
     });
-  
-    console.log(response);
   
     return 'success';
   } catch(e) {
