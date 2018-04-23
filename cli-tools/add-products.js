@@ -6,8 +6,6 @@ const program = require('commander');
 
 const clientConfigurationPath = './repository-user.json';
 
-
-
 program
 .version(VERSION)
 .usage('[options] <type> <file>')
@@ -17,10 +15,15 @@ program
 .parse(process.argv);
 
 async function main(productType, uuidsListPath) {
-  // const client = await getClientCredentials(clientConfigurationPath);
-  // const token = await getClientToken(client.id, client.secret);
+  const client = await getClientCredentials(clientConfigurationPath);
+  const token = await getClientToken(client.id, client.secret);
   const uuidsList = await getUuidsList(uuidsListPath);
-  console.log(uuidsList);
+
+  for(let uuid of uuidsList) {
+    uuid = uuid.toLocaleLowerCase();
+    let state = await addProductUuid(uuid, productType, token);
+    console.log(`${uuid} - ${state}`);
+  }
 };
 
 async function getClientCredentials(filePath) {
@@ -33,7 +36,8 @@ async function getClientCredentials(filePath) {
 }
 
 async function getClientToken(clientId, clientSecret) {
-  const options = { method: 'POST',
+  const options = { 
+    method: 'POST',
     url: 'https://moduware.au.auth0.com/oauth/token',
     headers: { 'content-type': 'application/json' },
     body: { 
@@ -58,4 +62,29 @@ async function getUuidsList(filePath) {
   const uuidsList = uuidsListText.split(/\r?\n/);
 
   return uuidsList;
+}
+
+async function addProductUuid(uuid, type, accessToken) {
+  const category = type.split('.')[1];
+
+  if(['module', 'gateway'].indexOf(category) == -1) throw new Exception(`Unknown product category: ${category}`);
+
+  const response = await request({
+    method: 'POST',
+    url: `https://api.moduware.com/v1/product/${uuid}`,
+    headers: { 
+      'content-type': 'application/json',
+      'user-agent': 'Mozilla/4.0 MDN Example',
+      'Authorization': 'Bearer ' + accessToken
+    },
+    body: { 
+      type: type,
+      category: category 
+    },
+    json: true 
+  });
+
+  console.log(response);
+
+  return response;
 }
