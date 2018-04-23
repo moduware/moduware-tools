@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/moduware/repository-api-client/issues"
   },
-  "homepage": "https://github.com/moduware/repository-api-client#readme"
+  "homepage": "https://github.com/moduware/repository-api-client#readme",
+  "dependencies": {
+    "commander": "^2.15.1",
+    "fs-extra": "^5.0.0",
+    "request": "^2.85.0",
+    "request-promise": "^4.2.2"
+  }
 }
