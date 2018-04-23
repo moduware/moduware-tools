@@ -23,6 +23,7 @@ async function main(productType, uuidsListPath) {
     uuid = uuid.toLocaleLowerCase();
     let state = await addProductUuid(uuid, productType, token);
     console.log(`${uuid} - ${state}`);
+    return;
   }
 };
 
@@ -69,22 +70,30 @@ async function addProductUuid(uuid, type, accessToken) {
 
   if(['module', 'gateway'].indexOf(category) == -1) throw new Exception(`Unknown product category: ${category}`);
 
-  const response = await request({
-    method: 'POST',
-    url: `https://api.moduware.com/v1/product/${uuid}`,
-    headers: { 
-      'content-type': 'application/json',
-      'user-agent': 'Mozilla/4.0 MDN Example',
-      'Authorization': 'Bearer ' + accessToken
-    },
-    body: { 
-      type: type,
-      category: category 
-    },
-    json: true 
-  });
-
-  console.log(response);
-
-  return response;
+  try {
+    const response = await request({
+      method: 'POST',
+      url: `https://api.moduware.com/v1/product/${uuid}`,
+      headers: { 
+        'content-type': 'application/json',
+        'user-agent': 'Mozilla/4.0 MDN Example',
+        'Authorization': 'Bearer ' + accessToken
+      },
+      body: { 
+        type: type,
+        category: category 
+      },
+      json: true 
+    });
+  
+    console.log(response);
+  
+    return 'success';
+  } catch(e) {
+    if(e.statusCode == 400) {
+      return e.error.message;
+    }
+    return e.message;
+  }
+  
 }
