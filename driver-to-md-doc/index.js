@@ -15,7 +15,49 @@ program
 
 async function main(driverFile, outputFile) {
   const driver = await getDriver(driverFile);
-  console.log({driver});
+
+  let documentation = makeBaseInfo(driver);
+  documentation += makeCommandsInfo(driver);
+  
+  console.log(documentation);
+}
+
+function makeBaseInfo(driver) {
+  return `---
+title: ${driver.type} Driver
+
+language_tabs:
+  - javascript
+
+search: true
+---
+
+# General info: ${driver.type}
+
+Type: ${driver.type}
+
+Version: ${driver.version}
+`;
+}
+
+function makeCommandsInfo(driver) {
+  let commandsDoc = "# Commands \n";
+  for(let command of driver.commands) {
+    commandsDoc += `
+## ${command.title || command.name}
+
+\`\`\`javascript
+Moduware.v0.API.Module.SendCommand(Moduware.Arguments.uuid, '${command.name}', [...]);
+\`\`\`
+
+Command Name | Message Type
+-------------- | --------------
+${command.name} | ${command.command}
+
+${command.description}
+`;
+  }
+  return commandsDoc;
 }
 
 async function getDriver(driverFilePath) {
