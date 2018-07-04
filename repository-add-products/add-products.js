@@ -37,7 +37,7 @@ async function main(productType, uuidsListPath) {
 };
 
 async function getClientCredentials(filePath) {
-  if(!await fs.existsSync(filePath)) throw new Exception('Client credentials not found');
+  if(!await fs.existsSync(filePath)) throw 'Client credentials not found';
 
   const clientConfigJson = await fs.readFile(filePath);
   const client = JSON.parse(clientConfigJson);
@@ -65,7 +65,7 @@ async function getClientToken(clientId, clientSecret) {
 }
 
 async function getUuidsList(filePath) {
-  if(!await fs.existsSync(clientConfigurationPath)) throw new Exception(`File ${filePath} not found`);
+  if(!await fs.existsSync(clientConfigurationPath)) `File ${filePath} not found`;
 
   const uuidsListBuffer = await fs.readFile(filePath);
   const uuidsListText = uuidsListBuffer.toString('utf8');
@@ -77,7 +77,7 @@ async function getUuidsList(filePath) {
 async function addProductUuid(uuid, type, accessToken) {
   const category = type.split('.')[1];
 
-  if(['module', 'gateway'].indexOf(category) == -1) throw new Exception(`Unknown product category: ${category}`);
+  if(['module', 'gateway'].indexOf(category) == -1) `Unknown product category: ${category}`;
 
   try {
     const response = await request({
