@@ -19,12 +19,15 @@ program
  * @param {String} outputFilePath path to documentation output
  */
 async function main(driverFilePath, outputFilePath) {
+  // loading driver
   const driver = await getDriver(driverFilePath);
 
+  // making documentation
   let documentation = makeBaseInfo(driver);
   documentation += makeCommandsInfo(driver);
   documentation += makeDataInfo(driver);
 
+  // writing result to output
   await fs.writeFile(outputFilePath, documentation);
 }
 
@@ -73,6 +76,7 @@ search: true
  * @param {ModuwareDriver} driver driver object
  */
 function makeDataInfo(driver) {
+  if(typeof(driver.data) == 'undefined') return '';
   let dataDoc = "# Data \n";
   dataDoc += `
 <aside class="warning">If you want to work with received data you need to listen for <code>DataReceived</code> event after Api is ready</aside>
@@ -179,6 +183,8 @@ dataVariablesExampleDoc += `}
  * @param {ModuwareDriver} driver driver object
  */
 function makeCommandsInfo(driver) {
+  if(typeof(driver.commands) == 'undefined') return '';
+
   let commandsDoc = "# Commands \n";
   for(let command of driver.commands) {
     const hasArguments = typeof(command.arguments) != 'undefined';
@@ -206,13 +212,9 @@ ${command.description}
  */
 function renderArgumentsForExample(command) {
   if(typeof(command.arguments) == 'undefined') return '';
-  let commandArgumentsString = '';
-  for(let i = 0; i < command.arguments.length; i++) {
-    commandArgumentsString += `<${command.arguments[i].name}>`;
-    if(i != command.arguments.length - 1) {
-      commandArgumentsString += ', ';
-    }
-  }
+
+  let commandArgumentsString = command.arguments.map((arg) => `<${arg.name}>`).join(', ');
+
   return commandArgumentsString;
 }
 
