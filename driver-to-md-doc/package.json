@@ -6,6 +6,9 @@
   "author": "Alex Chernov",
   "license": "Apache-2.0",
   "private": false,
+  "scripts": {
+    "test": "mocha"
+  },
   "dependencies": {
     "commander": "^2.16.0",
     "fs-extra": "^6.0.1"
