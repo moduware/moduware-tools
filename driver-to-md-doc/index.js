@@ -30,6 +30,9 @@ title: ${driver.type} Driver
 language_tabs:
   - javascript
 
+toc_footers:
+  - <a href='#'>Drivers list</a>
+
 search: true
 ---
 
@@ -44,7 +47,7 @@ search: true
 function makeDataInfo(driver) {
   let dataDoc = "# Data \n";
   dataDoc += `
-<aside class="warning">If you want to work with received data you need listed for <code>DataReceived</code> event after Api is ready</aside>
+<aside class="warning">If you want to work with received data you need to listen for <code>DataReceived</code> event after Api is ready</aside>
 > When Moduware API is ready start listening for received data
 
 \`\`\`javascript
