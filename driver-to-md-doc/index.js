@@ -43,9 +43,32 @@ search: true
 
 function makeDataInfo(driver) {
   let dataDoc = "# Data \n";
+  dataDoc += `
+<aside class="warning">If you want to work with received data you need listed for <code>DataReceived</code> event after Api is ready</aside>
+> When Moduware API is ready start listening for received data
+
+\`\`\`javascript
+document.addEventListener('WebViewApiReady', function() {
+  Moduware.v0.API.Module.addEventListener('DataReceived', function(event) {
+    // we don't care about data not related to our module
+    if(event.moduleUuid != Moduware.Arguments.uuid) return;
+
+    // ... handle specific received data here ...
+
+  });
+});
+\`\`\`
+  
+`;
   for(let data of driver.data) {
     dataDoc += `
 ## ${data.title || data.name}
+
+\`\`\`javascript
+if(event.dataSource == '${data.name}') {
+  // ... work with data variables here ...
+}
+\`\`\`
 
 Data Name | Message Type
 -------------- | --------------
@@ -62,7 +85,7 @@ ${data.description}
 function makeDataVariablesInfo(data) {
   if(typeof(data.variables) == 'undefined') return '';
   let dataVariablesDoc = "### Variables \n";
-
+  dataVariablesDoc += makeDataVariablesExample(data);
   dataVariablesDoc += `
 Name | Title | Description | States
 -------------- | -------------- | -------------- | --------------
@@ -77,6 +100,35 @@ Name | Title | Description | States
     dataVariablesDoc += "\n";
   }
   return dataVariablesDoc;
+}
+
+function makeDataVariablesExample(data) {
+  if(typeof(data.variables) == 'undefined') return '';
+  let dataVariablesExampleDoc = '';
+
+  for(let variable of data.variables) {
+    if(typeof(variable.state) == 'undefined') {
+      dataVariablesExampleDoc += `
+\`\`\`javascript      
+console.log(event.variables.${variable.name});
+\`\`\`
+`;
+    } else {
+      dataVariablesExampleDoc += `
+\`\`\`javascript  
+switch(event.variables.${variable.name}) {\n`;
+for(let state of Object.values(variable.state)) {
+  dataVariablesExampleDoc += `  case '${state}':
+  // ... handle the state here ...
+  break;\n`;
+}
+dataVariablesExampleDoc += `}
+\`\`\`
+`;
+    }
+  }
+
+  return dataVariablesExampleDoc;
 }
 
 function makeCommandsInfo(driver) {
