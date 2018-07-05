@@ -48,7 +48,7 @@ function makeCommandsInfo(driver) {
 ## ${command.title || command.name}
 
 \`\`\`javascript
-Moduware.v0.API.Module.SendCommand(Moduware.Arguments.uuid, '${command.name}', [${hasArguments ? '...': ''}]);
+Moduware.v0.API.Module.SendCommand(Moduware.Arguments.uuid, '${command.name}', [${hasArguments ? renderArgumentsForExample(command) : ''}]);
 \`\`\`
 
 Command Name | Message Type
@@ -62,6 +62,18 @@ ${command.description}
   return commandsDoc;
 }
 
+function renderArgumentsForExample(command) {
+  if(typeof(command.arguments) == 'undefined') return '';
+  let commandArgumentsString = '';
+  for(let i = 0; i < command.arguments.length; i++) {
+    commandArgumentsString += `<${command.arguments[i].name}>`;
+    if(i != command.arguments.length - 1) {
+      commandArgumentsString += ', ';
+    }
+  }
+  return commandArgumentsString;
+}
+
 function makeCommandsArgumentsInfo(command) {
   if(typeof(command.arguments) == 'undefined') return '';
   let argumentsDoc = "### Arguments \n";
@@ -69,10 +81,14 @@ function makeCommandsArgumentsInfo(command) {
     argumentsDoc += `
 Name | Description | Validation
 -------------- | -------------- | --------------
-${argument.name} | ${argument.description || '-'} | ${argument.validation || 'none'}  
+${argument.name} | ${argument.description || '-'} | ${argument.validation ? formatArgumentValidation(argument.validation) : 'none'}  
 `;
   }
   return argumentsDoc;
+}
+
+function formatArgumentValidation(validationString) {
+  return validationString.replace(/\{0\}/g, '**value**');
 }
 
 async function getDriver(driverFilePath) {
