@@ -13,16 +13,38 @@ program
 })
 .parse(process.argv);
 
-async function main(driverFile, outputFile) {
-  const driver = await getDriver(driverFile);
+/**
+ * Generates documentation out of driver file
+ * @param {String} driverFilePath path to driver
+ * @param {String} outputFilePath path to documentation output
+ */
+async function main(driverFilePath, outputFilePath) {
+  const driver = await getDriver(driverFilePath);
 
   let documentation = makeBaseInfo(driver);
   documentation += makeCommandsInfo(driver);
   documentation += makeDataInfo(driver);
 
-  console.log(documentation);
+  await fs.writeFile(outputFilePath, documentation);
 }
 
+/**
+ * Loads driver from specified file
+ * @param {String} driverFilePath path to driver file
+ */
+async function getDriver(driverFilePath) {
+  if(!fs.existsSync(driverFilePath)) throw `File ${driverFilePath} not found`;
+
+  const driverJson = await fs.readFile(driverFilePath);
+  const driver = JSON.parse(driverJson);
+
+  return driver;
+}
+
+/**
+ * Configures doc and outputs basic info about driver like version
+ * @param {ModuwareDriver} driver driver object
+ */
 function makeBaseInfo(driver) {
   return `---
 title: ${driver.type} Driver
@@ -44,6 +66,12 @@ search: true
 `;
 }
 
+//#region DriverData
+
+/**
+ * Makes documentation of driver data fields
+ * @param {ModuwareDriver} driver driver object
+ */
 function makeDataInfo(driver) {
   let dataDoc = "# Data \n";
   dataDoc += `
@@ -85,6 +113,10 @@ ${data.description}
   return dataDoc;
 }
 
+/**
+ * Makes documentation from variable of driver data field
+ * @param {DriverDataField} data driver data field object
+ */
 function makeDataVariablesInfo(data) {
   if(typeof(data.variables) == 'undefined') return '';
   let dataVariablesDoc = "### Variables \n";
@@ -105,6 +137,10 @@ Name | Title | Description | States
   return dataVariablesDoc;
 }
 
+/**
+ * Creates code examples from variables of driver data field
+ * @param {DriverDataField} data driver data field object
+ */
 function makeDataVariablesExample(data) {
   if(typeof(data.variables) == 'undefined') return '';
   let dataVariablesExampleDoc = '';
@@ -134,6 +170,14 @@ dataVariablesExampleDoc += `}
   return dataVariablesExampleDoc;
 }
 
+//#endregion
+
+//#region DriverCommands
+
+/**
+ * Makes documentation for commands in driver
+ * @param {ModuwareDriver} driver driver object
+ */
 function makeCommandsInfo(driver) {
   let commandsDoc = "# Commands \n";
   for(let command of driver.commands) {
@@ -156,6 +200,10 @@ ${command.description}
   return commandsDoc;
 }
 
+/**
+ * Creates arguments example string for code example
+ * @param {ModuwareDriverCommand} command driver command object
+ */
 function renderArgumentsForExample(command) {
   if(typeof(command.arguments) == 'undefined') return '';
   let commandArgumentsString = '';
@@ -168,6 +216,10 @@ function renderArgumentsForExample(command) {
   return commandArgumentsString;
 }
 
+/**
+ * Creates documentation from command arguments
+ * @param {ModuwareDriverCommand} command driver command object
+ */
 function makeCommandsArgumentsInfo(command) {
   if(typeof(command.arguments) == 'undefined') return '';
   let argumentsDoc = "### Arguments \n";
@@ -181,15 +233,12 @@ ${argument.name} | ${argument.description || '-'} | ${argument.validation ? form
   return argumentsDoc;
 }
 
+/**
+ * Makes validation string more human readable by replacing {0} to "value"
+ * @param {String} validationString validation string from driver
+ */
 function formatArgumentValidation(validationString) {
   return validationString.replace(/\{0\}/g, '**value**');
 }
 
-async function getDriver(driverFilePath) {
-  if(!fs.existsSync(driverFilePath)) throw `File ${driverFilePath} not found`;
-
-  const driverJson = await fs.readFile(driverFilePath);
-  const driver = JSON.parse(driverJson);
-
-  return driver;
-}
+//#endregion
