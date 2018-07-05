@@ -32,22 +32,23 @@ language_tabs:
 search: true
 ---
 
-# General info: ${driver.type}
+# Driver: ${driver.type}
 
-Type: ${driver.type}
+**Type**: ${driver.type}
 
-Version: ${driver.version}
+**Version**: ${driver.version}
 `;
 }
 
 function makeCommandsInfo(driver) {
   let commandsDoc = "# Commands \n";
   for(let command of driver.commands) {
+    const hasArguments = typeof(command.arguments) != 'undefined';
     commandsDoc += `
 ## ${command.title || command.name}
 
 \`\`\`javascript
-Moduware.v0.API.Module.SendCommand(Moduware.Arguments.uuid, '${command.name}', [...]);
+Moduware.v0.API.Module.SendCommand(Moduware.Arguments.uuid, '${command.name}', [${hasArguments ? '...': ''}]);
 \`\`\`
 
 Command Name | Message Type
@@ -56,8 +57,22 @@ ${command.name} | ${command.command}
 
 ${command.description}
 `;
+    commandsDoc += makeCommandsArgumentsInfo(command);
   }
   return commandsDoc;
+}
+
+function makeCommandsArgumentsInfo(command) {
+  if(typeof(command.arguments) == 'undefined') return '';
+  let argumentsDoc = "### Arguments \n";
+  for(let argument of command.arguments) {
+    argumentsDoc += `
+Name | Description | Validation
+-------------- | -------------- | --------------
+${argument.name} | ${argument.description || '-'} | ${argument.validation || 'none'}  
+`;
+  }
+  return argumentsDoc;
 }
 
 async function getDriver(driverFilePath) {
