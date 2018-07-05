@@ -18,7 +18,8 @@ async function main(driverFile, outputFile) {
 
   let documentation = makeBaseInfo(driver);
   documentation += makeCommandsInfo(driver);
-  
+  documentation += makeDataInfo(driver);
+
   console.log(documentation);
 }
 
@@ -38,6 +39,44 @@ search: true
 
 **Version**: ${driver.version}
 `;
+}
+
+function makeDataInfo(driver) {
+  let dataDoc = "# Data \n";
+  for(let data of driver.data) {
+    dataDoc += `
+## ${data.title || data.name}
+
+Data Name | Message Type
+-------------- | --------------
+${data.name} | ${data.source}
+
+${data.description}
+`;
+    dataDoc += makeDataVariablesInfo(data);
+  }
+
+  return dataDoc;
+}
+
+function makeDataVariablesInfo(data) {
+  if(typeof(data.variables) == 'undefined') return '';
+  let dataVariablesDoc = "### Variables \n";
+
+  dataVariablesDoc += `
+Name | Title | Description | States
+-------------- | -------------- | -------------- | --------------
+`;  
+  for(let variable of data.variables) {
+    dataVariablesDoc += `${variable.name} | ${variable.title || '-'} | ${variable.description || '-'}`;
+    if(typeof(variable.state) == 'undefined') {
+      dataVariablesDoc += ' | *';
+    } else {
+      dataVariablesDoc += ' | ' + Object.values(variable.state).join(' / ');
+    }
+    dataVariablesDoc += "\n";
+  }
+  return dataVariablesDoc;
 }
 
 function makeCommandsInfo(driver) {
