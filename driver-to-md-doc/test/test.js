@@ -3,6 +3,14 @@ const getDriver = require('../index').getDriver;
 const expect = chai.expect;
 const assert = chai.assert;
 
+describe('main()', () => {
+  xit('Calls getDriver() method');
+  xit('Calls makeBaseInfo() method');
+  xit('Calls makeCommandsInfo() method');
+  xit('Calls makeDataInfo() method');
+  xit('Saves result to output file');
+});
+
 describe('getDriver()', () => {
   it('Incorrect path should trigger not found exception', async () => {
     let exception = null;
