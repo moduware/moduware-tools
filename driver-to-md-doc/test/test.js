@@ -1,10 +1,42 @@
-const assert = require('assert');
+const chai = require('chai');
+const getDriver = require('../index').getDriver;
+const expect = chai.expect;
+const assert = chai.assert;
 
 describe('getDriver()', () => {
-  xit('Incorrect path should trigger not found exception');
-  xit('Unreadable json should trigger bad format exception');
-  xit('Missing type or version should trigger bad format exception');
-  xit('Correct path should return driver object');
+  it('Incorrect path should trigger not found exception', async () => {
+    let exception = null;
+    try {
+      await getDriver('./driver.json');
+    } catch(e) {
+      exception = e;
+    }
+    expect(exception).to.be.eql('File ./driver.json not found');
+  });
+
+  it('Unreadable json should trigger bad format exception', async () => {
+    let exception = null;
+    try {
+      await getDriver('./test/drivers/bad_json_driver.json');
+    } catch(e) {
+      exception = e;
+    }
+    expect(exception).to.be.eql('Bad file format: can\'t parse');
+  });
+
+  it('Missing type or version should trigger bad format exception', async () => {
+    let exception = null;
+    try {
+      await getDriver('./test/drivers/empty_object_driver.json');
+    } catch(e) {
+      exception = e;
+    }
+    expect(exception).to.be.eql('Bad file format: no type or version');
+  });
+  it('Correct path should return driver object', async () => {
+    const driver = await getDriver('./test/drivers/moduware.module.led.driver.json');
+    assert.isObject(driver);
+  });
 });
 
 describe('makeBaseInfo()', () => {

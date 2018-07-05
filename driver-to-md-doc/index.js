@@ -3,16 +3,6 @@ const VERSION = '1.0.0';
 const program = require('commander');
 const fs = require('fs-extra');
 
-program
-.version(VERSION)
-.option('-o, --output <outputfile>', 'Set output file')
-.usage('[options] <driverfile>')
-.action((driverFile) => {
-  const outputFile = program.output || 'driver.md';
-  main(driverFile, outputFile);
-})
-.parse(process.argv);
-
 /**
  * Generates documentation out of driver file
  * @param {String} driverFilePath path to driver
@@ -39,7 +29,13 @@ async function getDriver(driverFilePath) {
   if(!fs.existsSync(driverFilePath)) throw `File ${driverFilePath} not found`;
 
   const driverJson = await fs.readFile(driverFilePath);
-  const driver = JSON.parse(driverJson);
+  let driver = null;
+  try {
+    driver = JSON.parse(driverJson);
+  } catch(e) {
+    throw 'Bad file format: can\'t parse';
+  }
+  if(typeof driver.type == 'undefined' || typeof driver.version == 'undefined') throw 'Bad file format: no type or version';
 
   return driver;
 }
@@ -76,7 +72,7 @@ search: true
  * @param {ModuwareDriver} driver driver object
  */
 function makeDataInfo(driver) {
-  if(typeof(driver.data) == 'undefined') return '';
+  if(typeof driver.data == 'undefined') return '';
   let dataDoc = "# Data \n";
   dataDoc += `
 <aside class="warning">If you want to work with received data you need to listen for <code>DataReceived</code> event after Api is ready</aside>
@@ -122,7 +118,7 @@ ${data.description}
  * @param {DriverDataField} data driver data field object
  */
 function makeDataVariablesInfo(data) {
-  if(typeof(data.variables) == 'undefined') return '';
+  if(typeof data.variables == 'undefined') return '';
   let dataVariablesDoc = "### Variables \n";
   dataVariablesDoc += makeDataVariablesExample(data);
   dataVariablesDoc += `
@@ -146,7 +142,7 @@ Name | Title | Description | States
  * @param {DriverDataField} data driver data field object
  */
 function makeDataVariablesExample(data) {
-  if(typeof(data.variables) == 'undefined') return '';
+  if(typeof data.variables == 'undefined') return '';
   let dataVariablesExampleDoc = '';
 
   for(let variable of data.variables) {
@@ -183,7 +179,7 @@ dataVariablesExampleDoc += `}
  * @param {ModuwareDriver} driver driver object
  */
 function makeCommandsInfo(driver) {
-  if(typeof(driver.commands) == 'undefined') return '';
+  if(typeof driver.commands == 'undefined') return '';
 
   let commandsDoc = "# Commands \n";
   for(let command of driver.commands) {
@@ -211,7 +207,7 @@ ${command.description}
  * @param {ModuwareDriverCommand} command driver command object
  */
 function renderArgumentsForExample(command) {
-  if(typeof(command.arguments) == 'undefined') return '';
+  if(typeof command.arguments == 'undefined') return '';
 
   let commandArgumentsString = command.arguments.map((arg) => `<${arg.name}>`).join(', ');
 
@@ -223,7 +219,7 @@ function renderArgumentsForExample(command) {
  * @param {ModuwareDriverCommand} command driver command object
  */
 function makeCommandsArgumentsInfo(command) {
-  if(typeof(command.arguments) == 'undefined') return '';
+  if(typeof command.arguments == 'undefined') return '';
   let argumentsDoc = "### Arguments \n";
   for(let argument of command.arguments) {
     argumentsDoc += `
@@ -244,3 +240,19 @@ function formatArgumentValidation(validationString) {
 }
 
 //#endregion
+
+if(require.main === module) {
+  program
+  .version(VERSION)
+  .option('-o, --output <outputfile>', 'Set output file')
+  .usage('[options] <driverfile>')
+  .action((driverFile) => {
+    const outputFile = program.output || 'driver.md';
+    main(driverFile, outputFile);
+  })
+  .parse(process.argv);
+} else {
+  module.exports = {
+    getDriver
+  };
+}
