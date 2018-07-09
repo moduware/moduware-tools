@@ -266,6 +266,8 @@ if(require.main === module) {
     makeBaseInfo,
     makeCommandsInfo,
     renderArgumentsForExample,
-    makeCommandsArgumentsInfo
+    makeCommandsArgumentsInfo,
+    formatArgumentValidation,
+    makeDataInfo
   };
 }

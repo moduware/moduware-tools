@@ -9,13 +9,15 @@ const makeBaseInfo = testedScript.makeBaseInfo;
 const makeCommandsInfo = testedScript.makeCommandsInfo;
 const renderArgumentsForExample = testedScript.renderArgumentsForExample;
 const makeCommandsArgumentsInfo = testedScript.makeCommandsArgumentsInfo;
+const formatArgumentValidation = testedScript.formatArgumentValidation;
+const makeDataInfo = testedScript.makeDataInfo;
 
 describe('main()', () => {
-  xit('Calls getDriver() method');
-  xit('Calls makeBaseInfo() method');
-  xit('Calls makeCommandsInfo() method');
-  xit('Calls makeDataInfo() method');
-  xit('Saves result to output file');
+  it('Calls getDriver() method');
+  it('Calls makeBaseInfo() method');
+  it('Calls makeCommandsInfo() method');
+  it('Calls makeDataInfo() method');
+  it('Saves result to output file');
 });
 
 describe('getDriver()', () => {
@@ -228,17 +230,65 @@ Blue | - | (**value** >= 0) and (**value** <= 255)`;
   });
   
   describe('formatArgumentValidation()', () => {
-    it('Convert argument validation to human readable format');
+    it('Convert argument validation to human readable format', () => {
+      const validationString = '({0} >= 0) and ({0} <= 5)';
+      const correctFormattedValidationString = '(**value** >= 0) and (**value** <= 5)';
+      const formattedValidationString = formatArgumentValidation(validationString);
+      expect(formattedValidationString).to.be.equal(correctFormattedValidationString);
+    });
   });
 });
 
 describe('Driver Data', () => {
   describe('makeDataInfo()', () => {
-    it('Driver without data return empty string');
-    it('Output title and name for every data field');
+    let driver;
+    let dataInfo;
+    before(async () => {
+      driver = await getDriver('./test/drivers/nexpaq.module.hat.driver.json');
+      dataInfo = makeDataInfo(driver);
+    });
+
+    it('Driver without data return empty string', async () => {
+      const driverWithoutData = await getDriver('./test/drivers/no_commands_no_data_driver.json');
+      const dataInfo = makeDataInfo(driverWithoutData);
+      expect(dataInfo).to.be.equal('');
+    });
+
+    it('Output title and name for every data field', () => {
+      for(let dataField of driver.data) {
+        expect(dataInfo).to.contain(dataField.title);
+        expect(dataInfo).to.contain(dataField.name);
+      }
+    });
+
+    it('Missing data field name should trigger bad format exception', async () => {
+      const driverWithMissingDataName = await getDriver('./test/drivers/missing_datafield_name_driver.json');
+      let exception;
+      try {
+        makeDataInfo(driverWithMissingDataName);
+      } catch(e) {
+        exception = e;
+      }
+      expect(exception).to.be.equal('Bad file format: data field missing name');
+    });
+
+    it('Missing data field source should trigger bad format exception', async () => {
+      const driverWithMissingDataSource = await getDriver('./test/drivers/missing_datafield_source_driver.json');
+      let exception;
+      try {
+        makeDataInfo(driverWithMissingDataSource);
+      } catch(e) {
+        exception = e;
+      }
+      expect(exception).to.be.equal('Bad file format: data field missing source');
+    });
+
     it('Contains if statement in JS example');
+
     it('Contains table with info field info');
+
     it('Contains info field description');
+
     it('Calls makeDataVariablesInfo() for every data field');
   });
 
