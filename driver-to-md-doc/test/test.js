@@ -1,7 +1,10 @@
 const chai = require('chai');
-const getDriver = require('../index').getDriver;
 const expect = chai.expect;
 const assert = chai.assert;
+
+const testedScript = require('../index');
+const getDriver = testedScript.getDriver;
+const makeBaseInfo = testedScript.makeBaseInfo;
 
 describe('main()', () => {
   xit('Calls getDriver() method');
@@ -41,6 +44,7 @@ describe('getDriver()', () => {
     }
     expect(exception).to.be.eql('Bad file format: no type or version');
   });
+
   it('Correct path should return driver object', async () => {
     const driver = await getDriver('./test/drivers/moduware.module.led.driver.json');
     assert.isObject(driver);
@@ -48,8 +52,20 @@ describe('getDriver()', () => {
 });
 
 describe('makeBaseInfo()', () => {
-  xit('Info contains type and version of driver');
-  xit('Contains link to drivers list');
+  const driversListLink = "https://moduware.github.io/developer-documentation/module-drivers/";
+  let driver;
+  let baseInfo;
+  before(async () => {
+    driver = await getDriver('./test/drivers/moduware.module.led.driver.json');
+    baseInfo = makeBaseInfo(driver);
+  });
+  it('Info contains type and version of driver', () => {
+    expect(baseInfo).to.contain(driver.type);
+    expect(baseInfo).to.contain(driver.version);
+  });
+  it('Contains link to drivers list', () => {
+    expect(baseInfo).to.contain(driversListLink);
+  });
 });
 
 describe('Driver Commands', () => {
