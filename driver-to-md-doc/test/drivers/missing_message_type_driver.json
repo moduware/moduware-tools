@@ -1,0 +1,25 @@
+{
+  "type": "moduware.module.led",
+  "version": "1.1.0",
+  "commands": [
+    {
+      "name": "SetRGB",
+      "title": "Set color in RGB",
+      "description": "Changes color of module to specified RGB color, takes 3 integers",
+      "arguments": [
+          {
+              "name": "Red",
+              "validation": "({0} >= 0) and ({0} <= 255)"
+          }, 
+          {
+              "name": "Green",
+              "validation": "({0} >= 0) and ({0} <= 255)"
+          }, 
+          {
+              "name": "Blue",
+              "validation": "({0} >= 0) and ({0} <= 255)"
+          }
+      ]
+    }
+  ]
+}

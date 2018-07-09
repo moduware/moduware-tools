@@ -180,11 +180,14 @@ dataVariablesExampleDoc += `}
  * Makes documentation for commands in driver
  * @param {ModuwareDriver} driver driver object
  */
-function makeCommandsInfo(driver) {
+function makeCommandsInfo(driver, makeCommandsArgumentsInfoFn = null) {
   if(typeof driver.commands == 'undefined') return '';
+  makeCommandsArgumentsInfoFn = makeCommandsArgumentsInfoFn || makeCommandsArgumentsInfo;
 
   let commandsDoc = "# Commands \n";
   for(let command of driver.commands) {
+    if(typeof command.name == 'undefined') throw 'Bad file format: command missing name';
+    if(typeof command.command == 'undefined') throw 'Bad file format: command missing message type';
     const hasArguments = typeof(command.arguments) != 'undefined';
     commandsDoc += `
 ## ${command.title || command.name}
@@ -199,7 +202,7 @@ ${command.name} | ${command.command}
 
 ${command.description}
 `;
-    commandsDoc += makeCommandsArgumentsInfo(command);
+    commandsDoc += makeCommandsArgumentsInfoFn(command);
   }
   return commandsDoc;
 }
@@ -222,13 +225,11 @@ function renderArgumentsForExample(command) {
  */
 function makeCommandsArgumentsInfo(command) {
   if(typeof command.arguments == 'undefined') return '';
-  let argumentsDoc = "### Arguments \n";
-  for(let argument of command.arguments) {
-    argumentsDoc += `
+  let argumentsDoc = `### Arguments
 Name | Description | Validation
--------------- | -------------- | --------------
-${argument.name} | ${argument.description || '-'} | ${argument.validation ? formatArgumentValidation(argument.validation) : 'none'}  
-`;
+-------------- | -------------- | --------------\n`;
+  for(let argument of command.arguments) {
+    argumentsDoc += `${argument.name} | ${argument.description || '-'} | ${argument.validation ? formatArgumentValidation(argument.validation) : 'none'}\n`;
   }
   return argumentsDoc;
 }
@@ -256,6 +257,7 @@ if(require.main === module) {
 } else {
   module.exports = {
     getDriver,
-    makeBaseInfo
+    makeBaseInfo,
+    makeCommandsInfo
   };
 }
