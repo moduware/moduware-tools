@@ -3,6 +3,8 @@ const VERSION = '1.0.0';
 const program = require('commander');
 const fs = require('fs-extra');
 
+const driversListLink = "https://moduware.github.io/developer-documentation/module-drivers/";
+
 /**
  * Generates documentation out of driver file
  * @param {String} driverFilePath path to driver
@@ -52,7 +54,7 @@ language_tabs:
   - javascript
 
 toc_footers:
-  - <a href='#'>Drivers list</a>
+  - <a href='${driversListLink}'>Drivers list</a>
 
 search: true
 ---
@@ -253,6 +255,7 @@ if(require.main === module) {
   .parse(process.argv);
 } else {
   module.exports = {
-    getDriver
+    getDriver,
+    makeBaseInfo
   };
 }
