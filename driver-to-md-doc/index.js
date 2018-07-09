@@ -214,7 +214,12 @@ ${command.description}
 function renderArgumentsForExample(command) {
   if(typeof command.arguments == 'undefined') return '';
 
-  let commandArgumentsString = command.arguments.map((arg) => `<${arg.name}>`).join(', ');
+  let commandArgumentsString = command.arguments.map(
+    (arg) => {
+      if(typeof arg.name == 'undefined') throw `Bad file format: argument of command '${command.name}' missing name`;
+      return `<${arg.name}>`;
+    }
+  ).join(', ');
 
   return commandArgumentsString;
 }
@@ -223,13 +228,14 @@ function renderArgumentsForExample(command) {
  * Creates documentation from command arguments
  * @param {ModuwareDriverCommand} command driver command object
  */
-function makeCommandsArgumentsInfo(command) {
+function makeCommandsArgumentsInfo(command, formatArgumentValidationFn = null) {
   if(typeof command.arguments == 'undefined') return '';
+  formatArgumentValidationFn = formatArgumentValidationFn || formatArgumentValidation;
   let argumentsDoc = `### Arguments
 Name | Description | Validation
 -------------- | -------------- | --------------\n`;
   for(let argument of command.arguments) {
-    argumentsDoc += `${argument.name} | ${argument.description || '-'} | ${argument.validation ? formatArgumentValidation(argument.validation) : 'none'}\n`;
+    argumentsDoc += `${argument.name} | ${argument.description || '-'} | ${argument.validation ? formatArgumentValidationFn(argument.validation) : 'none'}\n`;
   }
   return argumentsDoc;
 }
@@ -258,6 +264,8 @@ if(require.main === module) {
   module.exports = {
     getDriver,
     makeBaseInfo,
-    makeCommandsInfo
+    makeCommandsInfo,
+    renderArgumentsForExample,
+    makeCommandsArgumentsInfo
   };
 }

@@ -7,6 +7,8 @@ const testedScript = require('../index');
 const getDriver = testedScript.getDriver;
 const makeBaseInfo = testedScript.makeBaseInfo;
 const makeCommandsInfo = testedScript.makeCommandsInfo;
+const renderArgumentsForExample = testedScript.renderArgumentsForExample;
+const makeCommandsArgumentsInfo = testedScript.makeCommandsArgumentsInfo;
 
 describe('main()', () => {
   xit('Calls getDriver() method');
@@ -148,15 +150,81 @@ Blue | - | (**value** >= 0) and (**value** <= 255)`;
   });
   
   describe('renderArgumentsForExample()', () => {
-    it('Command without arguments will return empty string');
-    it('Outputs correct example arguments string');
+    let driver;
+    before(async () => {
+      driver = await getDriver('./test/drivers/moduware.module.led.driver.json');
+    });
+
+    it('Command without arguments will return empty string', () => {
+      const commandWithoutArguments = driver.commands[1];
+      const commandArgumentsExample = renderArgumentsForExample(commandWithoutArguments);
+      expect(commandArgumentsExample).to.be.equal('');
+    });
+
+    it('Outputs correct example arguments string', () => {
+      const commandWithArguments = driver.commands[0];
+      const correctArgumentsExample = `<Red>, <Green>, <Blue>`;
+      const commandArgumentsExample = renderArgumentsForExample(commandWithArguments);
+      expect(commandArgumentsExample).to.be.equal(correctArgumentsExample);
+    });
+
+    it('Missing argument name should trigger bad format exception', async () => {
+      const driverWithMissingArgumentName = await getDriver('./test/drivers/missing_argument_name_driver.json');
+      const command = driverWithMissingArgumentName.commands[0];
+      let exception;
+      try {
+        renderArgumentsForExample(command);
+      } catch(e) {
+        exception = e;
+      }
+      expect(exception).to.be.equal(`Bad file format: argument of command '${command.name}' missing name`);
+    });
   });
   
   describe('makeCommandsArgumentsInfo()', () => {
-    it('Command without arguments will return empty string');
-    it('Outputs name and description for every command');
-    it('Calls formatArgumentValidation() for every argument that has validation');
-    it('Outputs none if there are no validation and - if there are no description');
+    let driver;
+    before(async () => {
+      driver = await getDriver('./test/drivers/moduware.module.led.driver.json');
+    });
+
+    it('Command without arguments will return empty string', () => {
+      const commandWithoutArguments = driver.commands[1];
+      const commandWithoutArgumentsInfo = makeCommandsArgumentsInfo(commandWithoutArguments);
+      expect(commandWithoutArgumentsInfo).to.be.equal('');
+    });
+
+    it('Outputs name and description for every argument', () => {
+      const commandWithArguments = driver.commands[3];
+      const argumentsInfo = makeCommandsArgumentsInfo(commandWithArguments);
+      for(let argument of commandWithArguments.arguments) {
+        expect(argumentsInfo).to.contain(argument.name);
+        if(typeof argument.description != 'undefined') {
+          expect(argumentsInfo).to.contain(argument.description);
+        }
+      }
+    });
+
+    it('Calls formatArgumentValidation() for every argument that has validation', () => {
+      const fakeFormatArgumentValidation = sinon.fake();  
+      let argumentsWithValidation = 0;
+      for(let command of driver.commands) {
+        if(typeof command.arguments != 'undefined') {
+          for(let argument of command.arguments) {
+            if(typeof argument.validation != 'undefined') argumentsWithValidation++;
+          }
+        }
+        makeCommandsArgumentsInfo(command, fakeFormatArgumentValidation);
+      }
+      expect(fakeFormatArgumentValidation.callCount).to.be.equal(argumentsWithValidation);
+    });
+
+    it('Outputs none if there are no validation and - if there are no description', async () => {
+      const driverWithArgumentWithoutDescriptionAndValidation = await getDriver('./test/drivers/nexpaq.module.hat.driver.json');
+      const command = driverWithArgumentWithoutDescriptionAndValidation.commands[2];
+      const argumentsInfo = makeCommandsArgumentsInfo(command);
+      expect(argumentsInfo).to.contain(' none');
+      expect(argumentsInfo).to.contain(' - ');
+    });
   });
   
   describe('formatArgumentValidation()', () => {
