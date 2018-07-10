@@ -96,6 +96,8 @@ document.addEventListener('WebViewApiReady', function() {
   
 `;
     for(let data of driver.data) {
+      if(typeof data.name == 'undefined') throw 'Bad file format: data field missing name';
+      if(typeof data.source == 'undefined') throw 'Bad file format: data field missing source';
       dataDoc += `
 ## ${data.title || data.name}
 
@@ -131,6 +133,7 @@ Name | Title | Description | States
 -------------- | -------------- | -------------- | --------------
 `;  
     for(let variable of data.variables) {
+      if(typeof variable.name == 'undefined') throw `Bad file format: variable of ${data.name} missing name`;
       dataVariablesDoc += `${variable.name} | ${variable.title || '-'} | ${variable.description || '-'}`;
       if(typeof(variable.state) == 'undefined') {
         dataVariablesDoc += ' | *';
