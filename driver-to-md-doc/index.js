@@ -273,6 +273,7 @@ if(require.main === module) {
     makeCommandsArgumentsInfo,
     formatArgumentValidation,
     makeDataInfo,
-    makeDataVariablesInfo
+    makeDataVariablesInfo,
+    makeDataVariablesExample
   };
 }

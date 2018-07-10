@@ -12,6 +12,7 @@ const makeCommandsArgumentsInfo = testedScript.makeCommandsArgumentsInfo;
 const formatArgumentValidation = testedScript.formatArgumentValidation;
 const makeDataInfo = testedScript.makeDataInfo;
 const makeDataVariablesInfo = testedScript.makeDataVariablesInfo;
+const makeDataVariablesExample = testedScript.makeDataVariablesExample;
 
 describe('main()', () => {
   it('Calls getDriver() method');
@@ -382,14 +383,43 @@ SensorStateChangeResponse | 2701`;
   });
 
   describe('makeDataVariablesExample()', () => {
-    it('Data field without variables will return empty string');
-
-    it('Output console.log for all variables without states');
-
-    it('Output switch for all variables with states');
-
-    it('Outputs state cases for every variable with states');
+    let driver;
+    before(async () => {
+      driver = await getDriver('./test/drivers/nexpaq.module.hat.driver.json');
+    });
     
+    it('Data field without variables will return empty string', async () => {
+      const driver = await getDriver('./test/drivers/datadield_without_variables_driver.json');
+      const dataField = driver.data[0];
+      const dataVariablesExample = makeDataVariablesExample(dataField);
+      expect(dataVariablesExample).to.be.equal('');
+    });
+
+    it('Output console.log for all variables without states', () => {
+      const dataField = driver.data[2];
+      const dataVariablesExample = makeDataVariablesExample(dataField);
+      for(let variable of dataField.variables) {
+        if(typeof variable.state == 'undefined') {
+          expect(dataVariablesExample).to.contain(`console.log(event.variables.${variable.name});`);
+        }
+      }
+    });
+
+    it('Output switch for all variables with states', () => {
+      const dataField = driver.data[1];
+      const dataVariablesExample = makeDataVariablesExample(dataField);
+      expect(dataVariablesExample).to.contain(`switch(event.variables.${dataField.variables[0].name}) {`);
+    });
+
+    it('Outputs state cases for every variable with states', () => {
+      const dataField = driver.data[1];
+      const dataVariablesExample = makeDataVariablesExample(dataField);
+      const stateCases = Object.values(dataField.variables[0].state).map(state => `case '${state}':`);
+      for(let stateCase of stateCases) {
+        expect(dataVariablesExample).to.contain(stateCase);
+      }
+    });
+
   });
 
 });
