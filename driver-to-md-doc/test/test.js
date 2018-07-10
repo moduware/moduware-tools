@@ -181,9 +181,10 @@ Blue | - | (**value** >= 0) and (**value** <= 255)`;
     });
 
     it('Calls makeCommandsArgumentsInfo() for every command', () => {
-      const fakeMakeCommandsArgumentsInfo = sinon.fake();
-      converter._makeCommandsInfo(driver, fakeMakeCommandsArgumentsInfo);
-      expect(fakeMakeCommandsArgumentsInfo.callCount).to.be.equal(driver.commands.length);
+      sinon.spy(converter, '_makeCommandsArgumentsInfo');
+      converter._makeCommandsInfo(driver);
+      expect(converter._makeCommandsArgumentsInfo.callCount).to.be.equal(driver.commands.length);
+      converter._makeCommandsArgumentsInfo.restore();
     });
   });
   
@@ -242,8 +243,8 @@ Blue | - | (**value** >= 0) and (**value** <= 255)`;
       }
     });
 
-    it('Calls formatArgumentValidation() for every argument that has validation', () => {
-      const fakeFormatArgumentValidation = sinon.fake();  
+    it('Calls formatArgumentValidation() for every argument that has validation', () => {  
+      sinon.spy(converter, '_formatArgumentValidation');
       let argumentsWithValidation = 0;
       for(let command of driver.commands) {
         if(typeof command.arguments != 'undefined') {
@@ -251,9 +252,10 @@ Blue | - | (**value** >= 0) and (**value** <= 255)`;
             if(typeof argument.validation != 'undefined') argumentsWithValidation++;
           }
         }
-        converter._makeCommandsArgumentsInfo(command, fakeFormatArgumentValidation);
+        converter._makeCommandsArgumentsInfo(command);
       }
-      expect(fakeFormatArgumentValidation.callCount).to.be.equal(argumentsWithValidation);
+      expect(converter._formatArgumentValidation.callCount).to.be.equal(argumentsWithValidation);
+      converter._formatArgumentValidation.restore();
     });
 
     it('Outputs none if there are no validation and - if there are no description', async () => {
@@ -340,9 +342,10 @@ SensorStateChangeResponse | 2701`;
     });
 
     it('Calls makeDataVariablesInfo() for every data field', () => {
-      const fakeMakeDataVariablesInfo = sinon.fake();
-      converter._makeDataInfo(driver, fakeMakeDataVariablesInfo);
-      expect(fakeMakeDataVariablesInfo.callCount).to.be.equal(driver.data.length);
+      sinon.spy(converter, '_makeDataVariablesInfo');
+      converter._makeDataInfo(driver);
+      expect(converter._makeDataVariablesInfo.callCount).to.be.equal(driver.data.length);
+      converter._makeDataVariablesInfo.restore();
     });
   });
 
@@ -359,9 +362,9 @@ SensorStateChangeResponse | 2701`;
     });
 
     it('Calls makeDataVariablesExample()', () => {
-      const fakeMakeDataVariablesExample = sinon.fake();
-      converter._makeDataVariablesInfo(driver.data[0], fakeMakeDataVariablesExample);
-      expect(fakeMakeDataVariablesExample.callCount).to.be.equal(1);
+      sinon.spy(converter, '_makeDataVariablesExample');
+      converter._makeDataVariablesInfo(driver.data[0]);
+      expect(converter._makeDataVariablesExample.callCount).to.be.equal(1);
     });
 
     it('Outputs name, title and description for every variable', () => {

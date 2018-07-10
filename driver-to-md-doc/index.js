@@ -74,9 +74,8 @@ search: true
    * Makes documentation of driver data fields
    * @param {ModuwareDriver} driver driver object
    */
-  _makeDataInfo(driver, makeDataVariablesInfoFn = null) {
+  _makeDataInfo(driver) {
     if(typeof driver.data == 'undefined') return '';
-    makeDataVariablesInfoFn = makeDataVariablesInfoFn || this._makeDataVariablesInfo;
   
     let dataDoc = "# Data \n";
     dataDoc += `
@@ -112,7 +111,7 @@ ${data.name} | ${data.source}
 
 ${data.description}
 `;
-      dataDoc += makeDataVariablesInfoFn.call(this, data);
+      dataDoc += this._makeDataVariablesInfo(data);
     }
   
     return dataDoc;
@@ -122,12 +121,11 @@ ${data.description}
    * Makes documentation from variable of driver data field
    * @param {DriverDataField} data driver data field object
    */
-  _makeDataVariablesInfo(data, makeDataVariablesExampleFn = null) {
+  _makeDataVariablesInfo(data) {
     if(typeof data.variables == 'undefined') return '';
-    makeDataVariablesExampleFn = makeDataVariablesExampleFn || this._makeDataVariablesExample;
   
     let dataVariablesDoc = "### Variables \n";
-    dataVariablesDoc += makeDataVariablesExampleFn(data);
+    dataVariablesDoc += this._makeDataVariablesExample(data);
     dataVariablesDoc += `
 Name | Title | Description | States
 -------------- | -------------- | -------------- | --------------
@@ -184,9 +182,8 @@ dataVariablesExampleDoc += `}
    * Makes documentation for commands in driver
    * @param {ModuwareDriver} driver driver object
    */
-  _makeCommandsInfo(driver, makeCommandsArgumentsInfoFn = null) {
+  _makeCommandsInfo(driver) {
     if(typeof driver.commands == 'undefined') return '';
-    makeCommandsArgumentsInfoFn = makeCommandsArgumentsInfoFn || this._makeCommandsArgumentsInfo;
   
     let commandsDoc = "# Commands \n";
     for(let command of driver.commands) {
@@ -206,7 +203,7 @@ ${command.name} | ${command.command}
 
 ${command.description}
 `;
-      commandsDoc += makeCommandsArgumentsInfoFn.call(this, command);
+      commandsDoc += this._makeCommandsArgumentsInfo(command);
     }
     return commandsDoc;
   }
@@ -232,14 +229,14 @@ ${command.description}
    * Creates documentation from command arguments
    * @param {ModuwareDriverCommand} command driver command object
    */
-  _makeCommandsArgumentsInfo(command, formatArgumentValidationFn = null) {
+  _makeCommandsArgumentsInfo(command) {
     if(typeof command.arguments == 'undefined') return '';
-    formatArgumentValidationFn = formatArgumentValidationFn || this._formatArgumentValidation;
+    
     let argumentsDoc = `### Arguments
 Name | Description | Validation
 -------------- | -------------- | --------------\n`;
     for(let argument of command.arguments) {
-      argumentsDoc += `${argument.name} | ${argument.description || '-'} | ${argument.validation ? formatArgumentValidationFn(argument.validation) : 'none'}\n`;
+      argumentsDoc += `${argument.name} | ${argument.description || '-'} | ${argument.validation ? this._formatArgumentValidation(argument.validation) : 'none'}\n`;
     }
     return argumentsDoc;
   }
