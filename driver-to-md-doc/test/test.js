@@ -11,6 +11,7 @@ const renderArgumentsForExample = testedScript.renderArgumentsForExample;
 const makeCommandsArgumentsInfo = testedScript.makeCommandsArgumentsInfo;
 const formatArgumentValidation = testedScript.formatArgumentValidation;
 const makeDataInfo = testedScript.makeDataInfo;
+const makeDataVariablesInfo = testedScript.makeDataVariablesInfo;
 
 describe('main()', () => {
   it('Calls getDriver() method');
@@ -65,10 +66,12 @@ describe('makeBaseInfo()', () => {
     driver = await getDriver('./test/drivers/moduware.module.led.driver.json');
     baseInfo = makeBaseInfo(driver);
   });
+
   it('Info contains type and version of driver', () => {
     expect(baseInfo).to.contain(driver.type);
     expect(baseInfo).to.contain(driver.version);
   });
+
   it('Contains link to drivers list', () => {
     expect(baseInfo).to.contain(driversListLink);
   });
@@ -283,29 +286,110 @@ describe('Driver Data', () => {
       expect(exception).to.be.equal('Bad file format: data field missing source');
     });
 
-    it('Contains if statement in JS example');
+    it('Contains if statement in JS example', () => {
+      const jsIfStatementExampleCode = `console.log(event.variables.ambient_temperature);`;
+      expect(dataInfo).to.contain(jsIfStatementExampleCode);
+    });
 
-    it('Contains table with info field info');
+    it('Contains table with info field info', () => {
+      const dataInfoTable = `Data Name | Message Type
+-------------- | --------------
+SensorStateChangeResponse | 2701`;
+      expect(dataInfo).to.contain(dataInfoTable);
+    });
 
-    it('Contains info field description');
+    it('Contains info field description', () => {
+      for(let dataField of driver.data) {
+        if(typeof dataField.description == 'undefined') {
+          expect(dataInfo).to.contain(dataField.description);
+        }
+      }
+    });
 
-    it('Calls makeDataVariablesInfo() for every data field');
+    it('Calls makeDataVariablesInfo() for every data field', () => {
+      const fakeMakeDataVariablesInfo = sinon.fake();
+      makeDataInfo(driver, fakeMakeDataVariablesInfo);
+      expect(fakeMakeDataVariablesInfo.callCount).to.be.equal(driver.data.length);
+    });
   });
 
   describe('makeDataVariablesInfo()', () => {
-    it('Data field without variables will return empty string');
-    it('Calls makeDataVariablesExample()');
-    it('Outputs name, title and description for every command');
-    it('Outputs - instead of title and description if they are not specified');
-    it('Outputs * if variable has no states');
-    it('Outputs all possible states if they are specified for a variable')
+    let driver;
+    before(async () => {
+      driver = await getDriver('./test/drivers/nexpaq.module.hat.driver.json');
+    });
+
+    it('Data field without variables will return empty string', async () => {
+      const driver = await getDriver('./test/drivers/datadield_without_variables_driver.json');
+      const dataVariablesInfo = makeDataVariablesInfo(driver.data[0]);
+      expect(dataVariablesInfo).to.be.equal('');
+    });
+
+    it('Calls makeDataVariablesExample()', () => {
+      const fakeMakeDataVariablesExample = sinon.fake();
+      makeDataVariablesInfo(driver.data[0], fakeMakeDataVariablesExample);
+      expect(fakeMakeDataVariablesExample.callCount).to.be.equal(1);
+    });
+
+    it('Outputs name, title and description for every variable', () => {
+      const dataField = driver.data[2];
+      const dataVariablesInfo = makeDataVariablesInfo(dataField);
+      for(let variable of dataField.variables) {
+        expect(dataVariablesInfo).to.contain(variable.name);
+        if(typeof variable.title != 'undefined') {
+          expect(dataVariablesInfo).to.contain(variable.title);
+        }
+        if(typeof variable.description != 'undefined') {
+          expect(dataVariablesInfo).to.contain(variable.description);
+        }
+      }
+    });
+
+    it('Missing variable name should trigger bad format exception', async () => {
+      const driver = await getDriver('./test/drivers/variable_without_name_driver.json');
+      const dataField = driver.data[0];
+      let exception;
+      try {
+        makeDataVariablesInfo(dataField);
+      } catch(e) {
+        exception = e;
+      }
+      expect(exception).to.be.equal(`Bad file format: variable of ${dataField.name} missing name`);
+    });
+
+    it('Outputs - instead of title and description if they are not specified', async () => {
+      const driver = await getDriver('./test/drivers/variable_without_title_and_description_driver.json');
+      const dataField = driver.data[0];
+      const dataVariablesInfo = makeDataVariablesInfo(dataField);
+      expect(dataVariablesInfo).to.contain(' - ');
+      expect(dataVariablesInfo).to.contain(' -');
+    });
+
+    it('Outputs * if variable has no states', () => {
+      const dataField = driver.data[2];
+      const dataVariablesInfo = makeDataVariablesInfo(dataField);
+      expect(dataVariablesInfo).to.contain('| *');
+    });
+
+    it('Outputs all possible states if they are specified for a variable', () => {
+      const dataField = driver.data[1];
+      const dataVariablesInfo = makeDataVariablesInfo(dataField);
+      const states = Object.values(dataField.variables[0].state);
+      for(let state of states) {
+        expect(dataVariablesInfo).to.contain(state);
+      }
+    })
   });
 
   describe('makeDataVariablesExample()', () => {
     it('Data field without variables will return empty string');
+
     it('Output console.log for all variables without states');
+
     it('Output switch for all variables with states');
+
     it('Outputs state cases for every variable with states');
+    
   });
 
 });

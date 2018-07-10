@@ -73,8 +73,10 @@ search: true
  * Makes documentation of driver data fields
  * @param {ModuwareDriver} driver driver object
  */
-function makeDataInfo(driver) {
+function makeDataInfo(driver, makeDataVariablesInfoFn = null) {
   if(typeof driver.data == 'undefined') return '';
+  makeDataVariablesInfoFn = makeDataVariablesInfoFn || makeDataVariablesInfo;
+
   let dataDoc = "# Data \n";
   dataDoc += `
 <aside class="warning">If you want to work with received data you need to listen for <code>DataReceived</code> event after Api is ready</aside>
@@ -109,7 +111,7 @@ ${data.name} | ${data.source}
 
 ${data.description}
 `;
-    dataDoc += makeDataVariablesInfo(data);
+    dataDoc += makeDataVariablesInfoFn(data);
   }
 
   return dataDoc;
@@ -119,10 +121,12 @@ ${data.description}
  * Makes documentation from variable of driver data field
  * @param {DriverDataField} data driver data field object
  */
-function makeDataVariablesInfo(data) {
+function makeDataVariablesInfo(data, makeDataVariablesExampleFn = null) {
   if(typeof data.variables == 'undefined') return '';
+  makeDataVariablesExampleFn = makeDataVariablesExampleFn || makeDataVariablesExample;
+
   let dataVariablesDoc = "### Variables \n";
-  dataVariablesDoc += makeDataVariablesExample(data);
+  dataVariablesDoc += makeDataVariablesExampleFn(data);
   dataVariablesDoc += `
 Name | Title | Description | States
 -------------- | -------------- | -------------- | --------------
@@ -268,6 +272,7 @@ if(require.main === module) {
     renderArgumentsForExample,
     makeCommandsArgumentsInfo,
     formatArgumentValidation,
-    makeDataInfo
+    makeDataInfo,
+    makeDataVariablesInfo
   };
 }

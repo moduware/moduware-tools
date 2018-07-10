@@ -1,0 +1,12 @@
+{
+  "type": "nexpaq.module.hat",
+  "version": "1.1.1",
+  "data": [
+    {
+      "name": "SensorStateChangeResponse",
+      "title": "Sensor State Change Reponse",
+      "description": "Response to sensor state change command",
+      "source": "2701"
+    }
+  ]
+}
