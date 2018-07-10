@@ -5,49 +5,50 @@ const fs = require('fs-extra');
 
 const driversListLink = "https://moduware.github.io/developer-documentation/module-drivers/";
 
-/**
- * Generates documentation out of driver file
- * @param {String} driverFilePath path to driver
- * @param {String} outputFilePath path to documentation output
- */
-async function main(driverFilePath, outputFilePath) {
-  // loading driver
-  const driver = await getDriver(driverFilePath);
-
-  // making documentation
-  let documentation = makeBaseInfo(driver);
-  documentation += makeCommandsInfo(driver);
-  documentation += makeDataInfo(driver);
-
-  // writing result to output
-  await fs.writeFile(outputFilePath, documentation);
-}
-
-/**
- * Loads driver from specified file
- * @param {String} driverFilePath path to driver file
- */
-async function getDriver(driverFilePath) {
-  if(!fs.existsSync(driverFilePath)) throw `File ${driverFilePath} not found`;
-
-  const driverJson = await fs.readFile(driverFilePath);
-  let driver = null;
-  try {
-    driver = JSON.parse(driverJson);
-  } catch(e) {
-    throw 'Bad file format: can\'t parse';
+class DriverToMdConverter {
+  /**
+   * Generates documentation out of driver file
+   * @param {String} driverFilePath path to driver
+   * @param {String} outputFilePath path to documentation output
+   */
+  async convert(driverFilePath, outputFilePath) {
+    // loading driver
+    const driver = await this._getDriver(driverFilePath);
+  
+    // making documentation
+    let documentation = this._makeBaseInfo(driver);
+    documentation += this._makeCommandsInfo(driver);
+    documentation += this._makeDataInfo(driver);
+  
+    // writing result to output
+    await fs.writeFile(outputFilePath, documentation);
   }
-  if(typeof driver.type == 'undefined' || typeof driver.version == 'undefined') throw 'Bad file format: no type or version';
-
-  return driver;
-}
-
-/**
- * Configures doc and outputs basic info about driver like version
- * @param {ModuwareDriver} driver driver object
- */
-function makeBaseInfo(driver) {
-  return `---
+  
+  /**
+   * Loads driver from specified file
+   * @param {String} driverFilePath path to driver file
+   */
+  async _getDriver(driverFilePath) {
+    if(!fs.existsSync(driverFilePath)) throw `File ${driverFilePath} not found`;
+  
+    const driverJson = await fs.readFile(driverFilePath);
+    let driver = null;
+    try {
+      driver = JSON.parse(driverJson);
+    } catch(e) {
+      throw 'Bad file format: can\'t parse';
+    }
+    if(typeof driver.type == 'undefined' || typeof driver.version == 'undefined') throw 'Bad file format: no type or version';
+  
+    return driver;
+  }
+  
+  /**
+   * Configures doc and outputs basic info about driver like version
+   * @param {ModuwareDriver} driver driver object
+   */
+  _makeBaseInfo(driver) {
+    return `---
 title: ${driver.type} Driver
 
 language_tabs:
@@ -65,20 +66,20 @@ search: true
 
 **Version**: ${driver.version}
 `;
-}
-
-//#region DriverData
-
-/**
- * Makes documentation of driver data fields
- * @param {ModuwareDriver} driver driver object
- */
-function makeDataInfo(driver, makeDataVariablesInfoFn = null) {
-  if(typeof driver.data == 'undefined') return '';
-  makeDataVariablesInfoFn = makeDataVariablesInfoFn || makeDataVariablesInfo;
-
-  let dataDoc = "# Data \n";
-  dataDoc += `
+  }
+  
+  //#region DriverData
+  
+  /**
+   * Makes documentation of driver data fields
+   * @param {ModuwareDriver} driver driver object
+   */
+  _makeDataInfo(driver, makeDataVariablesInfoFn = null) {
+    if(typeof driver.data == 'undefined') return '';
+    makeDataVariablesInfoFn = makeDataVariablesInfoFn || this._makeDataVariablesInfo;
+  
+    let dataDoc = "# Data \n";
+    dataDoc += `
 <aside class="warning">If you want to work with received data you need to listen for <code>DataReceived</code> event after Api is ready</aside>
 > When Moduware API is ready start listening for received data
 
@@ -95,8 +96,8 @@ document.addEventListener('WebViewApiReady', function() {
 \`\`\`
   
 `;
-  for(let data of driver.data) {
-    dataDoc += `
+    for(let data of driver.data) {
+      dataDoc += `
 ## ${data.title || data.name}
 
 \`\`\`javascript
@@ -111,55 +112,55 @@ ${data.name} | ${data.source}
 
 ${data.description}
 `;
-    dataDoc += makeDataVariablesInfoFn(data);
+      dataDoc += makeDataVariablesInfoFn.call(this, data);
+    }
+  
+    return dataDoc;
   }
-
-  return dataDoc;
-}
-
-/**
- * Makes documentation from variable of driver data field
- * @param {DriverDataField} data driver data field object
- */
-function makeDataVariablesInfo(data, makeDataVariablesExampleFn = null) {
-  if(typeof data.variables == 'undefined') return '';
-  makeDataVariablesExampleFn = makeDataVariablesExampleFn || makeDataVariablesExample;
-
-  let dataVariablesDoc = "### Variables \n";
-  dataVariablesDoc += makeDataVariablesExampleFn(data);
-  dataVariablesDoc += `
+  
+  /**
+   * Makes documentation from variable of driver data field
+   * @param {DriverDataField} data driver data field object
+   */
+  _makeDataVariablesInfo(data, makeDataVariablesExampleFn = null) {
+    if(typeof data.variables == 'undefined') return '';
+    makeDataVariablesExampleFn = makeDataVariablesExampleFn || this._makeDataVariablesExample;
+  
+    let dataVariablesDoc = "### Variables \n";
+    dataVariablesDoc += makeDataVariablesExampleFn(data);
+    dataVariablesDoc += `
 Name | Title | Description | States
 -------------- | -------------- | -------------- | --------------
 `;  
-  for(let variable of data.variables) {
-    dataVariablesDoc += `${variable.name} | ${variable.title || '-'} | ${variable.description || '-'}`;
-    if(typeof(variable.state) == 'undefined') {
-      dataVariablesDoc += ' | *';
-    } else {
-      dataVariablesDoc += ' | ' + Object.values(variable.state).join(' / ');
+    for(let variable of data.variables) {
+      dataVariablesDoc += `${variable.name} | ${variable.title || '-'} | ${variable.description || '-'}`;
+      if(typeof(variable.state) == 'undefined') {
+        dataVariablesDoc += ' | *';
+      } else {
+        dataVariablesDoc += ' | ' + Object.values(variable.state).join(' / ');
+      }
+      dataVariablesDoc += "\n";
     }
-    dataVariablesDoc += "\n";
+    return dataVariablesDoc;
   }
-  return dataVariablesDoc;
-}
-
-/**
- * Creates code examples from variables of driver data field
- * @param {DriverDataField} data driver data field object
- */
-function makeDataVariablesExample(data) {
-  if(typeof data.variables == 'undefined') return '';
-  let dataVariablesExampleDoc = '';
-
-  for(let variable of data.variables) {
-    if(typeof(variable.state) == 'undefined') {
-      dataVariablesExampleDoc += `
+  
+  /**
+   * Creates code examples from variables of driver data field
+   * @param {DriverDataField} data driver data field object
+   */
+  _makeDataVariablesExample(data) {
+    if(typeof data.variables == 'undefined') return '';
+    let dataVariablesExampleDoc = '';
+  
+    for(let variable of data.variables) {
+      if(typeof(variable.state) == 'undefined') {
+        dataVariablesExampleDoc += `
 \`\`\`javascript      
 console.log(event.variables.${variable.name});
 \`\`\`
 `;
-    } else {
-      dataVariablesExampleDoc += `
+      } else {
+        dataVariablesExampleDoc += `
 \`\`\`javascript  
 switch(event.variables.${variable.name}) {\n`;
 for(let state of Object.values(variable.state)) {
@@ -170,34 +171,33 @@ for(let state of Object.values(variable.state)) {
 dataVariablesExampleDoc += `}
 \`\`\`
 `;
+      }
     }
+  
+    return dataVariablesExampleDoc;
   }
+  //#endregion
 
-  return dataVariablesExampleDoc;
-}
-
-//#endregion
-
-//#region DriverCommands
-
-/**
- * Makes documentation for commands in driver
- * @param {ModuwareDriver} driver driver object
- */
-function makeCommandsInfo(driver, makeCommandsArgumentsInfoFn = null) {
-  if(typeof driver.commands == 'undefined') return '';
-  makeCommandsArgumentsInfoFn = makeCommandsArgumentsInfoFn || makeCommandsArgumentsInfo;
-
-  let commandsDoc = "# Commands \n";
-  for(let command of driver.commands) {
-    if(typeof command.name == 'undefined') throw 'Bad file format: command missing name';
-    if(typeof command.command == 'undefined') throw 'Bad file format: command missing message type';
-    const hasArguments = typeof(command.arguments) != 'undefined';
-    commandsDoc += `
+  //#region DriverCommands
+  
+  /**
+   * Makes documentation for commands in driver
+   * @param {ModuwareDriver} driver driver object
+   */
+  _makeCommandsInfo(driver, makeCommandsArgumentsInfoFn = null) {
+    if(typeof driver.commands == 'undefined') return '';
+    makeCommandsArgumentsInfoFn = makeCommandsArgumentsInfoFn || this._makeCommandsArgumentsInfo;
+  
+    let commandsDoc = "# Commands \n";
+    for(let command of driver.commands) {
+      if(typeof command.name == 'undefined') throw 'Bad file format: command missing name';
+      if(typeof command.command == 'undefined') throw 'Bad file format: command missing message type';
+      const hasArguments = typeof(command.arguments) != 'undefined';
+      commandsDoc += `
 ## ${command.title || command.name}
 
 \`\`\`javascript
-Moduware.v0.API.Module.SendCommand(Moduware.Arguments.uuid, '${command.name}', [${hasArguments ? renderArgumentsForExample(command) : ''}]);
+Moduware.v0.API.Module.SendCommand(Moduware.Arguments.uuid, '${command.name}', [${hasArguments ? this._renderArgumentsForExample(command) : ''}]);
 \`\`\`
 
 Command Name | Message Type
@@ -206,53 +206,57 @@ ${command.name} | ${command.command}
 
 ${command.description}
 `;
-    commandsDoc += makeCommandsArgumentsInfoFn(command);
-  }
-  return commandsDoc;
-}
-
-/**
- * Creates arguments example string for code example
- * @param {ModuwareDriverCommand} command driver command object
- */
-function renderArgumentsForExample(command) {
-  if(typeof command.arguments == 'undefined') return '';
-
-  let commandArgumentsString = command.arguments.map(
-    (arg) => {
-      if(typeof arg.name == 'undefined') throw `Bad file format: argument of command '${command.name}' missing name`;
-      return `<${arg.name}>`;
+      commandsDoc += makeCommandsArgumentsInfoFn.call(this, command);
     }
-  ).join(', ');
-
-  return commandArgumentsString;
-}
-
-/**
- * Creates documentation from command arguments
- * @param {ModuwareDriverCommand} command driver command object
- */
-function makeCommandsArgumentsInfo(command, formatArgumentValidationFn = null) {
-  if(typeof command.arguments == 'undefined') return '';
-  formatArgumentValidationFn = formatArgumentValidationFn || formatArgumentValidation;
-  let argumentsDoc = `### Arguments
+    return commandsDoc;
+  }
+  
+  /**
+   * Creates arguments example string for code example
+   * @param {ModuwareDriverCommand} command driver command object
+   */
+  _renderArgumentsForExample(command) {
+    if(typeof command.arguments == 'undefined') return '';
+  
+    let commandArgumentsString = command.arguments.map(
+      (arg) => {
+        if(typeof arg.name == 'undefined') throw `Bad file format: argument of command '${command.name}' missing name`;
+        return `<${arg.name}>`;
+      }
+    ).join(', ');
+  
+    return commandArgumentsString;
+  }
+  
+  /**
+   * Creates documentation from command arguments
+   * @param {ModuwareDriverCommand} command driver command object
+   */
+  _makeCommandsArgumentsInfo(command, formatArgumentValidationFn = null) {
+    if(typeof command.arguments == 'undefined') return '';
+    formatArgumentValidationFn = formatArgumentValidationFn || this._formatArgumentValidation;
+    let argumentsDoc = `### Arguments
 Name | Description | Validation
 -------------- | -------------- | --------------\n`;
-  for(let argument of command.arguments) {
-    argumentsDoc += `${argument.name} | ${argument.description || '-'} | ${argument.validation ? formatArgumentValidationFn(argument.validation) : 'none'}\n`;
+    for(let argument of command.arguments) {
+      argumentsDoc += `${argument.name} | ${argument.description || '-'} | ${argument.validation ? formatArgumentValidationFn(argument.validation) : 'none'}\n`;
+    }
+    return argumentsDoc;
   }
-  return argumentsDoc;
+  
+  /**
+   * Makes validation string more human readable by replacing {0} to "value"
+   * @param {String} validationString validation string from driver
+   */
+  _formatArgumentValidation(validationString) {
+    return validationString.replace(/\{0\}/g, '**value**');
+  }
+  
+  //#endregion
+
 }
 
-/**
- * Makes validation string more human readable by replacing {0} to "value"
- * @param {String} validationString validation string from driver
- */
-function formatArgumentValidation(validationString) {
-  return validationString.replace(/\{0\}/g, '**value**');
-}
 
-//#endregion
 
 if(require.main === module) {
   program
@@ -261,19 +265,10 @@ if(require.main === module) {
   .usage('[options] <driverfile>')
   .action((driverFile) => {
     const outputFile = program.output || 'driver.md';
-    main(driverFile, outputFile);
+    const converter = new DriverToMdConverter();
+    converter.convert(driverFile, outputFile);
   })
   .parse(process.argv);
 } else {
-  module.exports = {
-    getDriver,
-    makeBaseInfo,
-    makeCommandsInfo,
-    renderArgumentsForExample,
-    makeCommandsArgumentsInfo,
-    formatArgumentValidation,
-    makeDataInfo,
-    makeDataVariablesInfo,
-    makeDataVariablesExample
-  };
+  module.exports = DriverToMdConverter;
 }
