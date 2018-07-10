@@ -1,26 +1,57 @@
 const chai = require('chai');
 const sinon = require('sinon');
+const fs = require('fs');
 const expect = chai.expect;
 const assert = chai.assert;
 
 const DriverToMdConverter = require('../index');
 const converter = new DriverToMdConverter();
-// const getDriver = converter._getDriver;
-// const makeBaseInfo = converter._makeBaseInfo;
-// const makeCommandsInfo = converter._makeCommandsInfo;
-// const renderArgumentsForExample = converter._renderArgumentsForExample;
-// const makeCommandsArgumentsInfo = converter._makeCommandsArgumentsInfo;
-// const formatArgumentValidation = converter._formatArgumentValidation;
-// const makeDataInfo = converter._makeDataInfo;
-// const makeDataVariablesInfo = converter._makeDataVariablesInfo;
-// const makeDataVariablesExample = converter._makeDataVariablesExample;
 
-describe('main()', () => {
-  it('Calls getDriver() method');
-  it('Calls makeBaseInfo() method');
-  it('Calls makeCommandsInfo() method');
-  it('Calls makeDataInfo() method');
-  it('Saves result to output file');
+describe('convert()', () => {
+  const outputPath = './test/drivers/output.md';
+
+  before(async () => {
+    sinon.spy(converter, '_getDriver');
+    sinon.spy(converter, '_makeBaseInfo');
+    sinon.spy(converter, '_makeCommandsInfo');
+    sinon.spy(converter, '_makeDataInfo');
+    await converter.convert('./test/drivers/nexpaq.module.hat.driver.json', outputPath);
+  })
+
+  it('Calls getDriver() method', () => {
+    expect(converter._getDriver.callCount).to.be.equal(1);
+  });
+
+  it('Calls makeBaseInfo() method', () => {
+    expect(converter._makeBaseInfo.callCount).to.be.equal(1);
+  });
+
+  it('Calls makeCommandsInfo() method', () => {
+    expect(converter._makeCommandsInfo.callCount).to.be.equal(1);
+  });
+
+  it('Calls makeDataInfo() method', () => {
+    expect(converter._makeDataInfo.callCount).to.be.equal(1);
+  });
+
+  it('Saves result to output file', async () => {
+    fs.unlinkSync(outputPath);
+    await converter.convert('./test/drivers/nexpaq.module.hat.driver.json', outputPath);
+    let exception = null;
+    try {
+      fs.accessSync(outputPath);
+    } catch(e) {
+      exception = e;
+    }
+    expect(exception).to.be.equal(null);
+  });
+
+  after(() => {
+    converter._getDriver.restore();
+    converter._makeBaseInfo.restore();
+    converter._makeCommandsInfo.restore();
+    converter._makeDataInfo.restore();
+  });
 });
 
 describe('getDriver()', () => {

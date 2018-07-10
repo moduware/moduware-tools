@@ -256,8 +256,6 @@ Name | Description | Validation
 
 }
 
-
-
 if(require.main === module) {
   program
   .version(VERSION)
