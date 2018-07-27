@@ -26,7 +26,7 @@ async function main(productType, uuidsListPath) {
     let formatedPercent = ('0' + percent.toFixed(1)).slice(-4);
     
     let uuid = uuidsList[index];
-    uuid = uuid.toLocaleLowerCase();
+    
     try {
       let state = await addProductUuid(uuid, productType, token);
       console.log(`${formatedPercent}% ${uuid} - ${state}`);
@@ -70,8 +70,10 @@ async function getUuidsList(filePath) {
   const uuidsListBuffer = await fs.readFile(filePath);
   const uuidsListText = uuidsListBuffer.toString('utf8');
   const uuidsList = uuidsListText.split(/\r?\n/);
+  // making sure that all uuids are lower case
+  const lowerCaseUuidsList = uuidsList.map(u => u.toLocaleLowerCase());
 
-  return uuidsList;
+  return lowerCaseUuidsList;
 }
 
 async function addProductUuid(uuid, type, accessToken) {
