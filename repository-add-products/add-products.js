@@ -21,20 +21,46 @@ async function main(productType, uuidsListPath) {
 
   let percent = 0;
 
+  // making statistics out of process
+  const stats = {};
+
   for(let index = 0; index < uuidsList.length; index++) {
     percent = 100 * index / uuidsList.length;
     let formatedPercent = ('0' + percent.toFixed(1)).slice(-4);
     
     let uuid = uuidsList[index];
     
+    let result = '';
     try {
       let state = await addProductUuid(uuid, productType, token);
       console.log(`${formatedPercent}% ${uuid} - ${state}`);
+      result = state;
     } catch(e) {
       console.log(`${formatedPercent}% ${uuid} - ${e.message}`);
+      result = e.message;
+    }
+
+    // Adding to stats
+    if(typeof(stats[result]) == 'undefined') {
+      stats[result] = 1;
+    } else {
+      stats[result]++;
     }
   }
+
+  // Output resulting stats
+  outputStats(stats);
 };
+
+/**
+ * Outputs statitiscs bases on statistics object
+ * @param {Object} stats statistics object, where each key represent category and stores integer with number of entries
+ */
+function outputStats(stats) {
+  console.log("\n\nStatistics:\n")
+  const keys = Object.keys(stats);
+  keys.forEach(k => console.log(`${k}: ${stats[k]} \n`));
+}
 
 async function getClientCredentials(filePath) {
   if(!await fs.existsSync(filePath)) throw 'Client credentials not found';
